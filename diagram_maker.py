@@ -4,40 +4,6 @@ import math
 import latex_to_svg
 
 
-def main():
-
-    context = svg_high_level.Context(width=256, height=512)
-
-    # test_svg = svg_handler.SVG(".\\output\\test.svg")
-
-    context.draw_rectangle(x=0, y=0, width=256, height=512, fill_color_rgb=(255.0, 255.0, 255.0))
-
-    context.path_init()
-    context.path_move_to(10, 10)
-    context.path_line_to(110, 10)
-    context.path_quadratic_bezier(150, 60, 110, 110)
-    context.path_cubic_bezier(80, 90, 40, 120, 10, 110)
-    context.path_close()
-    context.path_finish()
-
-    context.path_init()
-    context.path_move_to(150, 200)
-    context.path_rel_quadratic_bezier(30, 0, 0, 50)
-    context.path_rel_smooth_quadratic_bezier(20, 10)
-    context.path_rel_smooth_quadratic_bezier(-20, 10)
-    context.path_close()
-    context.path_finish()
-
-    context.draw_circle(150, 300, 50)
-    context.draw_ellipse(100, 400, 10, 30)
-
-    context.draw_polygon(10, 200, 20, 200, 30, 240, 50, 300, 60, 100)
-
-    context.draw_text("This is a test!", 100, 500)
-
-    context.write(file_path=".\\output\\test.svg")
-
-
 def draw_diagram(width: int, height: int, commands: callable, file_path: str):
     ctx = svg_high_level.Context(width=width, height=height)
 
