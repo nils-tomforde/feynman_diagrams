@@ -1,6 +1,7 @@
-
-import svg_high_level
 import math
+
+import svg_handler
+import svg_high_level
 import latex_to_svg
 
 
@@ -10,6 +11,27 @@ def draw_diagram(width: int, height: int, commands: callable, file_path: str):
     commands(ctx)
 
     ctx.write(file_path=file_path)
+
+
+def group(context, commands, x, y, width, height, rotation_angle):
+    x *= context.scaling_x
+    y *= context.scaling_y
+
+    width *= context.scaling_x
+    height *= context.scaling_y
+
+    context_group = svg_high_level.Context(width=width, height=height)
+
+    commands(context_group)
+
+    transform_string = f"translate({x},{y}) rotate({rotation_angle})"
+
+    group_tag = svg_handler.Group(transform=transform_string)
+
+    for child in context_group.svg.root_tag.children:
+        group_tag.append_child_tag(child)
+
+    context.svg.root_tag.append_child_tag(group_tag)
 
 
 def draw_formula(context: svg_high_level.Context, formula: str, x: float, y: float, fontsize: float = None, font_color: tuple[float, float, float] = None):
@@ -28,7 +50,7 @@ def draw_formula(context: svg_high_level.Context, formula: str, x: float, y: flo
     context.svg.root_tag.append_child_tag(latex_tag)
 
 
-def draw_text(context: svg_high_level.Context, text: str, x: float, y: float, fontsize: float = None, font_color: tuple[float, float, float] = None):
+def draw_text(context: svg_high_level.Context, text: str, x: float, y: float, fontsize: float = None, font_color: tuple[float, float, float] = None, center_text = False):
     # Use context defaults when not overwritten
     if fontsize is None:
         fontsize = context.fontsize
@@ -39,7 +61,12 @@ def draw_text(context: svg_high_level.Context, text: str, x: float, y: float, fo
     x *= context.scaling_x
     y *= context.scaling_y
 
-    context.draw_text(text_string=text, x=x, y=y, font_size=fontsize)
+    if center_text:
+        text_anchor = "middle"
+    else:
+        text_anchor = "start"
+
+    context.draw_text(text_string=text, x=x, y=y, font_size=fontsize, text_anchor=text_anchor)
     # TODO: Add fontcolor to text
 
 
@@ -167,13 +194,44 @@ def fermion_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_
     # TODO: shift the triangle if cross is placed
 
 
-def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+def fermion_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str, is_anti_particle=False, draw_arrow=True, is_counterterm=False):
+    x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
+
+    # TODO: Consider: Could also make curvature always in the same direction. Switch direction by reversing p1 and p2
+
+    draw_arc(context, p1, p2, curvature)
+
+    distance = math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+    angle = -math.atan2(y2 - y1, x2 - x1)
+
+    if curvature == "right":
+        arc_middle_rel_p1 = (distance / 2, - distance / 2)  # position of the middle of the arc relative to point 1
+    elif curvature == "left":
+        arc_middle_rel_p1 = (distance / 2, distance / 2)
+    else:
+        raise  # TODO: Add meaningful exception
+
+    arc_middle_rel_p1_rotated = rotate_vector_2d(arc_middle_rel_p1, angle)
+
+    xm = x1 + arc_middle_rel_p1_rotated[0]
+    ym = y1 + arc_middle_rel_p1_rotated[1]
+
+    if draw_arrow:
+        _draw_triangle(context, xm, ym, angle, is_anti_particle)
+    if is_counterterm:
+        _draw_cross(context, xm, ym, angle)
+
+
+def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False, start_with_dale=False):
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
     # TODO: Make wave density constant
     # TODO: Add possibility to change whether wave starts with hill or dale
 
     number_of_waves = 6
     shift_size = 5 * context.line_width
+
+    if start_with_dale:
+        shift_size *= -1
 
     distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
     step_size = distance / (2 * number_of_waves)
@@ -212,6 +270,59 @@ def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_pa
 
     if is_counterterm:
         _draw_cross(context, xm, ym, angle)
+
+
+def boson_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str, start_with_dale: bool = False, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+    x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
+
+    number_of_waves = 6
+    shift_size = 5 * context.line_width
+
+    distance = math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+    step_size = distance / (2 * number_of_waves + 1)
+
+    angle = -math.atan2(y2 - y1, x2 - x1)
+
+    context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
+    context.path_move_to(x1, y1)
+
+    if start_with_dale:
+        shift_size *= -1
+
+    for i in range(2 * number_of_waves + 1):  # Add one to symmetrize
+        if i % 2 == 0:
+            shift = - shift_size
+        else:
+            shift = shift_size
+
+        angle_arc = i * math.pi / (2 * number_of_waves + 1)
+        angle_arc_next = (i + 1) * math.pi / (2 * number_of_waves + 1)
+
+        x = (- math.cos(angle_arc_next) + math.cos(angle_arc)) * distance / 2
+        y = (- math.sin(angle_arc_next) + math.sin(angle_arc)) * distance / 2
+
+        p3 = (x, y)
+        p3_rotated = rotate_vector_2d(p3, angle)
+
+        distance_to_next_point = math.sqrt(x**2 + y**2)
+
+        if shift < 0:
+            p1 = (distance_to_next_point / 3, shift)
+            p2 = (2 * distance_to_next_point / 3, shift)
+        else:  # shorten the shifts of inner curves (they are shorter because they lie inside the circle!)
+            p1 = (distance_to_next_point / 3, shift * (step_size / distance_to_next_point))
+            p2 = (2 * distance_to_next_point / 3, shift * (step_size / distance_to_next_point))
+
+        p1_rotated = rotate_vector_2d(p1, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+        p2_rotated = rotate_vector_2d(p2, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+
+        context.path_rel_cubic_bezier(p1_rotated[0], p1_rotated[1],
+                                      p2_rotated[0], p2_rotated[1],
+                                      p3_rotated[0], p3_rotated[1])
+
+    context.path_line_to(x2, y2)
+
+    context.path_finish()
 
 
 def gluon_line(context: svg_high_level.Context, p1: Point, p2: Point, center=True, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
@@ -300,6 +411,74 @@ def gluon_line(context: svg_high_level.Context, p1: Point, p2: Point, center=Tru
 
     if is_counterterm:
         _draw_cross(context, xm, ym, angle)
+
+
+def gluon_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, center=True, is_anti_particle=True, draw_arrow=True, is_counterterm=False):
+    # TODO: Improve this function! Results are not smooth!
+
+    x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
+
+    number_of_loops = 8
+
+    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+
+    if center:
+        step_size = distance / (number_of_loops + 2)
+    else:
+        step_size = distance / number_of_loops
+
+    loop_width = step_size
+
+    loop_height = 8 * context.line_width
+
+    angle = -math.atan2(y2 - y1, x2 - x1)
+
+    context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
+    context.path_move_to(x1, y1)
+
+
+    for i in range(number_of_loops):
+
+        angle_arc = i * math.pi / number_of_loops
+        angle_arc_next = (i + 1) * math.pi / number_of_loops
+
+        x = (- math.cos(angle_arc_next) + math.cos(angle_arc)) * distance / 2
+        y = (- math.sin(angle_arc_next) + math.sin(angle_arc)) * distance / 2
+
+        p3 = (x, y)
+        p3_rotated = rotate_vector_2d(p3, angle)
+
+        distance_to_next_point = math.sqrt(x**2 + y**2)
+
+        # loop first half
+        pa1 = (distance_to_next_point, 0)
+        pa2 = (distance_to_next_point, loop_height)
+        pa3 = (distance_to_next_point / 2, loop_height)
+
+        # loop second half
+        pb1 = (- distance_to_next_point / 2, 0)
+        pb2 = (- distance_to_next_point / 2, - loop_height)
+        pb3 = (distance_to_next_point / 2, - loop_height)
+
+        pa1_rotated = rotate_vector_2d(pa1, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+        pa2_rotated = rotate_vector_2d(pa2, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+        pa3_rotated = rotate_vector_2d(pa3, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+
+        pb1_rotated = rotate_vector_2d(pb1, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+        pb2_rotated = rotate_vector_2d(pb2, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+        pb3_rotated = rotate_vector_2d(pb3, math.pi / 2 - (angle_arc + angle_arc_next) / 2 + angle)
+
+        context.path_rel_cubic_bezier(pa1_rotated[0], pa1_rotated[1],
+                                      pa2_rotated[0], pa2_rotated[1],
+                                      pa3_rotated[0], pa3_rotated[1])
+
+        context.path_rel_cubic_bezier(pb1_rotated[0], pb1_rotated[1],
+                                      pb2_rotated[0], pb2_rotated[1],
+                                      pb3_rotated[0], pb3_rotated[1])
+
+        # context.path_rel_line_to(p3_rotated[0], p3_rotated[1])
+
+    context.path_finish()
 
 
 def scalar_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
@@ -441,3 +620,60 @@ def grid(context: svg_high_level.Context):
                    line_width=1)
 
         draw_text(context, str(y), x=0.01, y=y+0.02, fontsize=8)
+
+
+def draw_arc(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str):
+    # curvature: "right" or "left"
+    x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
+
+    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    arc_radius = distance / 2
+
+    angle = -math.atan2(y2 - y1, x2 - x1)
+
+    context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
+    context.path_move_to(x1, y1)
+
+    factor = (4 / 3) * (math.sqrt(2) - 1)  # see https://stackoverflow.com/questions/1734745/how-to-create-circle-with-bézier-curves
+
+    # first Bézier curve (coordinates relative to start)
+    if curvature == "right":
+        c11 = (0, - factor * arc_radius)
+        c12 = ((1 - factor) * arc_radius, - arc_radius)
+        p1 = (arc_radius, - arc_radius)
+    elif curvature == "left":
+        c11 = (0, factor * arc_radius)
+        c12 = ((1 - factor) * arc_radius, arc_radius)
+        p1 = (arc_radius, arc_radius)
+    else:
+        raise  # TODO: Add meaningful exception
+
+    c11_rotated = rotate_vector_2d(c11, angle)
+    c12_rotated = rotate_vector_2d(c12, angle)
+    p1_rotated = rotate_vector_2d(p1, angle)
+
+    context.path_rel_cubic_bezier(c11_rotated[0], c11_rotated[1],
+                                  c12_rotated[0], c12_rotated[1],
+                                  p1_rotated[0], p1_rotated[1])
+
+    # second Bézier curve (coordinates relative to end of first Bézier curve)
+    if curvature == "right":
+        c21 = (factor * arc_radius, 0)
+        c22 = (arc_radius, (1 - factor) * arc_radius)
+        p2 = (arc_radius, arc_radius)
+    elif curvature == "left":
+        c21 = (factor * arc_radius, 0)
+        c22 = (arc_radius, (factor - 1) * arc_radius)
+        p2 = (arc_radius, - arc_radius)
+    else:
+        raise  # TODO: Add meaningful exception
+
+    c21_rotated = rotate_vector_2d(c21, angle)
+    c22_rotated = rotate_vector_2d(c22, angle)
+    p2_rotated = rotate_vector_2d(p2, angle)
+
+    context.path_rel_cubic_bezier(c21_rotated[0], c21_rotated[1],
+                                  c22_rotated[0], c22_rotated[1],
+                                  p2_rotated[0], p2_rotated[1])
+
+    context.path_finish()

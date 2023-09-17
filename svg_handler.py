@@ -178,6 +178,11 @@ class Image(xml_handler.Tag):
 
 
 class Group(xml_handler.Tag):
-    pass
+    def __init__(self, transform: str):
+        attributes = {
+            "transform": transform
+        }
+
+        super().__init__(tag_name="g", attributes=attributes, content="", is_empty=False)
 
 
