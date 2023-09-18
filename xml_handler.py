@@ -1,10 +1,15 @@
-import xml.etree.ElementTree as ET
 
 from typing import Self
+import xml.etree.ElementTree
 
 
 class Tag:  # maybe call this an element instead
-    def __init__(self, tag_name: str, attributes: dict[str, str], content: str, children: list[Self] = None, is_empty=False):
+    def __init__(self,
+                 tag_name: str,
+                 attributes: dict[str, str],
+                 content: str,
+                 children: list[Self] = None,
+                 is_empty: bool = False) -> None:
         self.tag_name = tag_name
         self.attributes = attributes
         self.content = content
@@ -18,10 +23,11 @@ class Tag:  # maybe call this an element instead
         # self.end_tag = f'</{self.tag_name}>'
         # self.empty_tag = f"<{self.tag_name}/>"
 
-    def append_child_tag(self, child: Self):
+    def append_child_tag(self,
+                         child: Self) -> None:
         self.children.append(child)
 
-    def get_string_representation(self):
+    def get_string_representation(self) -> str:
         if self.is_empty:
             string_representation = f'<{self.tag_name} '
             for key, value in self.attributes.items():
@@ -48,16 +54,17 @@ class Tag:  # maybe call this an element instead
 
 
 # TODO: Every child element has a "child order" or "degree" and is indented by tabs in the number of the order
+#       This will improve readability of the svg
 
-def read_xml(content_string: str):
-    root = ET.fromstring(content_string)
+def read_xml(content_string: str) -> Tag:
+    root = xml.etree.ElementTree.fromstring(content_string)
 
     root_tag = create_tag_from_et_element(root)
 
     return root_tag
 
 
-def create_tag_from_et_element(element: ET.Element) -> Tag:
+def create_tag_from_et_element(element: xml.etree.ElementTree.Element) -> Tag:
     tag_name = clean_string_namespace(element.tag)
     attributes = clean_attributes_namespace(element.attrib)
 

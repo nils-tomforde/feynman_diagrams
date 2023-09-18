@@ -1,12 +1,11 @@
 
-
 import svg_handler
 
 
 class Context:
     def __init__(self,
-                 width: int,
-                 height: int) -> None:
+                 width: float,
+                 height: float) -> None:
         self.svg = svg_handler.SVG(width=str(width), height=str(height))
 
         self.width = width
@@ -23,16 +22,20 @@ class Context:
 
         self.path = {}
 
-    def set_line_width(self, line_width: float):
+    def set_line_width(self,
+                       line_width: float) -> None:
         self.line_width = line_width
 
-    def set_line_color(self, line_color: tuple[float, float, float]):
+    def set_line_color(self,
+                       line_color: tuple[float, float, float]) -> None:
         self.line_color = line_color
 
-    def set_fontsize(self, fontsize: float):
+    def set_fontsize(self,
+                     fontsize: float) -> None:
         self.fontsize = fontsize
 
-    def set_font_color(self, font_color: tuple[float, float, float]):
+    def set_font_color(self,
+                       font_color: tuple[float, float, float]) -> None:
         self.font_color = font_color
 
     def draw_circle(self,
@@ -102,7 +105,8 @@ class Context:
 
         self.svg.root_tag.append_child_tag(line)
 
-    def draw_polyline(self, *args: float) -> None:
+    def draw_polyline(self,
+                      *args: float) -> None:
         points = f''
 
         for index, arg in enumerate(args):
@@ -117,7 +121,8 @@ class Context:
 
         self.svg.root_tag.append_child_tag(polyline)
 
-    def draw_polygon(self, *args: float) -> None:
+    def draw_polygon(self,
+                     *args: float) -> None:
         points = f''
 
         for index, arg in enumerate(args):
@@ -197,10 +202,12 @@ class Context:
                      y: float) -> None:
         self.path["d"] += f"L {x},{y} "
 
-    def path_horizontal_line(self, x: float) -> None:
+    def path_horizontal_line(self,
+                             x: float) -> None:
         self.path["d"] += f"H {x} "
 
-    def path_vertical_line(self, y: float) -> None:
+    def path_vertical_line(self,
+                           y: float) -> None:
         self.path["d"] += f"V {y} "
 
     def path_close(self):
@@ -309,7 +316,9 @@ class Context:
 
         self.path["d"] += f"q {xc},{yc},{x},{y} "
 
-    def path_rel_smooth_quadratic_bezier(self, x: float, y: float) -> None:
+    def path_rel_smooth_quadratic_bezier(self,
+                                         x: float,
+                                         y: float) -> None:
         # x, y target points. uses the point reflection of the previous control point on the previous enpoint as the new control point
 
         self.path["d"] += f"t {x},{y} "

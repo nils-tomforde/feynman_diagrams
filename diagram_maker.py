@@ -1,11 +1,15 @@
+
 import math
 
+import latex_to_svg
 import svg_handler
 import svg_high_level
-import latex_to_svg
 
 
-def draw_diagram(width: int, height: int, commands: callable, file_path: str):
+def draw_diagram(width: int,
+                 height: int,
+                 commands: callable,
+                 file_path: str) -> None:
     ctx = svg_high_level.Context(width=width, height=height)
 
     commands(ctx)
@@ -13,7 +17,13 @@ def draw_diagram(width: int, height: int, commands: callable, file_path: str):
     ctx.write(file_path=file_path)
 
 
-def group(context, commands, x, y, width, height, rotation_angle):
+def group(context: svg_high_level.Context,
+          commands: callable,
+          x: float,
+          y: float,
+          width: float,
+          height: float,
+          rotation_angle: float = 0) -> None:
     x *= context.scaling_x
     y *= context.scaling_y
 
@@ -34,7 +44,14 @@ def group(context, commands, x, y, width, height, rotation_angle):
     context.svg.root_tag.append_child_tag(group_tag)
 
 
-def draw_formula(context: svg_high_level.Context, formula: str, x: float, y: float, fontsize: float = None, font_color: tuple[float, float, float] = None):
+def draw_formula(context: svg_high_level.Context,
+                 formula: str,
+                 x: float,
+                 y: float,
+                 fontsize: float = None,
+                 font_color: tuple[float, float, float] = None,
+                 center_x: bool = True,
+                 center_y: bool = True) -> None:
     # Use context defaults when not overwritten
     if fontsize is None:
         fontsize = context.fontsize
@@ -45,12 +62,19 @@ def draw_formula(context: svg_high_level.Context, formula: str, x: float, y: flo
     x *= context.scaling_x
     y *= context.scaling_y
 
-    latex_tag = latex_to_svg.latex_to_svg(formula, fontsize, color_rgb_256=font_color, x=x, y=y)
+    latex_tag = latex_to_svg.latex_to_svg(formula, fontsize, color_rgb_256=font_color, x=x, y=y,
+                                          center_x=center_x, center_y=center_y)
 
     context.svg.root_tag.append_child_tag(latex_tag)
 
 
-def draw_text(context: svg_high_level.Context, text: str, x: float, y: float, fontsize: float = None, font_color: tuple[float, float, float] = None, center_text = False):
+def draw_text(context: svg_high_level.Context,
+              text: str,
+              x: float,
+              y: float,
+              fontsize: float = None,
+              font_color: tuple[float, float, float] = None,
+              center_text: bool = False) -> None:
     # Use context defaults when not overwritten
     if fontsize is None:
         fontsize = context.fontsize
@@ -70,11 +94,21 @@ def draw_text(context: svg_high_level.Context, text: str, x: float, y: float, fo
     # TODO: Add fontcolor to text
 
 
-def set_background(context: svg_high_level.Context, r: float, g: float, b: float, a: float):
+def set_background(context: svg_high_level.Context,
+                   r: float,
+                   g: float,
+                   b: float,
+                   a: float) -> None:
     context.draw_rectangle(0, 0, context.width, context.height, fill_color_rgb=(r, g, b), fill_opacity=a)
 
 
-def _draw_line(context, x1: float, y1: float, x2: float, y2: float, line_width=None, line_color=None):
+def _draw_line(context: svg_high_level.Context,
+               x1: float,
+               y1: float,
+               x2: float,
+               y2: float,
+               line_width=None,
+               line_color=None) -> None:
     if line_width is None:
         line_width = context.line_width
     if line_color is None:
@@ -87,9 +121,15 @@ def _draw_line(context, x1: float, y1: float, x2: float, y2: float, line_width=N
     context.path_finish()
 
 
-def _draw_full_circle(context: svg_high_level.Context, cx: float, cy: float, r: float, line_width: float = None,
-                      line_color: tuple[float, float, float] = None, fill_color: tuple[float, float, float] = None,
-                      fill_opacity: float = None, line_opacity: float = None):
+def _draw_full_circle(context: svg_high_level.Context,
+                      cx: float,
+                      cy: float,
+                      r: float,
+                      line_width: float = None,
+                      line_color: tuple[float, float, float] = None,
+                      fill_color: tuple[float, float, float] = None,
+                      fill_opacity: float = None,
+                      line_opacity: float = None) -> None:
     if line_width is None:
         line_width = context.line_width
     if line_color is None:
@@ -98,7 +138,11 @@ def _draw_full_circle(context: svg_high_level.Context, cx: float, cy: float, r: 
     context.draw_circle(cx, cy, r, fill_color_rgb=fill_color, stroke_color_rgb=line_color, fill_opacity=fill_opacity, opacity=line_opacity, stroke_width=line_width)
 
 
-def _draw_triangle(context: svg_high_level.Context, xm: float, ym: float, angle: float, is_anti_particle: bool):
+def _draw_triangle(context: svg_high_level.Context,
+                   xm: float,
+                   ym: float,
+                   angle: float,
+                   is_anti_particle: bool) -> None:
     size = context.line_width * 4
 
     if not is_anti_particle:
@@ -123,7 +167,10 @@ def _draw_triangle(context: svg_high_level.Context, xm: float, ym: float, angle:
     context.path_finish()
 
 
-def _draw_cross(context: svg_high_level.Context, xm: float, ym: float, angle: float):
+def _draw_cross(context: svg_high_level.Context,
+                xm: float,
+                ym: float,
+                angle: float) -> None:
     # TODO: Maybe do it like in Peskin and Schroeder and make a circle around the cross and dont show the underlying line
 
     size = context.line_width * 6
@@ -149,22 +196,33 @@ def _draw_cross(context: svg_high_level.Context, xm: float, ym: float, angle: fl
 
 
 class Point:
-    def __init__(self, context: svg_high_level.Context, x: float, y: float):
+    def __init__(self,
+                 context: svg_high_level.Context,
+                 x: float,
+                 y: float) -> None:
         self.x = x * context.scaling_x
         self.y = y * context.scaling_y
 
 
 class Vertex(Point):
-    def __init__(self, context: svg_high_level.Context, x: float, y: float):
+    def __init__(self,
+                 context: svg_high_level.Context,
+                 x: float,
+                 y: float) -> None:
         super().__init__(context, x, y)
 
 
 class ExtPoint(Point):
-    def __init__(self, context: svg_high_level.Context, x: float, y: float):
+    def __init__(self,
+                 context: svg_high_level.Context,
+                 x: float,
+                 y: float) -> None:
         super().__init__(context, x, y)
 
 
-def vertex(context: svg_high_level.Context, p: Point, is_counterterm=False):
+def vertex(context: svg_high_level.Context,
+           p: Point,
+           is_counterterm=False) -> None:
     x, y = p.x, p.y
 
     size = context.line_width * 1.5
@@ -175,7 +233,12 @@ def vertex(context: svg_high_level.Context, p: Point, is_counterterm=False):
         _draw_cross(context=context, xm=x, ym=y, angle=0)
 
 
-def fermion_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=True, is_counterterm=False):
+def fermion_line(context: svg_high_level.Context,
+                 p1: Point,
+                 p2: Point,
+                 is_anti_particle: bool = False,
+                 draw_arrow: bool = True,
+                 is_counterterm: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     _draw_line(context, x1, y1, x2, y2)
@@ -183,7 +246,7 @@ def fermion_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_
     xm = (x1 + x2) / 2
     ym = (y1 + y2) / 2
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     if draw_arrow:
         _draw_triangle(context, xm, ym, angle, is_anti_particle)
@@ -194,15 +257,21 @@ def fermion_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_
     # TODO: shift the triangle if cross is placed
 
 
-def fermion_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str, is_anti_particle=False, draw_arrow=True, is_counterterm=False):
+def fermion_line_curved(context: svg_high_level.Context,
+                        p1: Point,
+                        p2: Point,
+                        curvature: str,
+                        is_anti_particle: bool = False,
+                        draw_arrow: bool = True,
+                        is_counterterm: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     # TODO: Consider: Could also make curvature always in the same direction. Switch direction by reversing p1 and p2
 
     draw_arc(context, p1, p2, curvature)
 
-    distance = math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    distance = get_distance(p1, p2)
+    angle = get_angle(p1, p2)
 
     if curvature == "right":
         arc_middle_rel_p1 = (distance / 2, - distance / 2)  # position of the middle of the arc relative to point 1
@@ -222,7 +291,13 @@ def fermion_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, c
         _draw_cross(context, xm, ym, angle)
 
 
-def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False, start_with_dale=False):
+def boson_line(context: svg_high_level.Context,
+               p1: Point,
+               p2: Point,
+               is_anti_particle: bool = False,
+               draw_arrow: bool = False,
+               is_counterterm: bool = False,
+               start_with_dale: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
     # TODO: Make wave density constant
     # TODO: Add possibility to change whether wave starts with hill or dale
@@ -233,10 +308,11 @@ def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_pa
     if start_with_dale:
         shift_size *= -1
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
+
     step_size = distance / (2 * number_of_waves)
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
@@ -272,16 +348,23 @@ def boson_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_pa
         _draw_cross(context, xm, ym, angle)
 
 
-def boson_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str, start_with_dale: bool = False, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+def boson_line_curved(context: svg_high_level.Context,
+                      p1: Point,
+                      p2: Point,
+                      curvature: str,
+                      start_with_dale: bool = False,
+                      is_anti_particle: bool = False,
+                      draw_arrow: bool = False,
+                      is_counterterm: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     number_of_waves = 6
     shift_size = 5 * context.line_width
 
-    distance = math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+    distance = get_distance(p1, p2)
     step_size = distance / (2 * number_of_waves + 1)
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
@@ -325,13 +408,19 @@ def boson_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, cur
     context.path_finish()
 
 
-def gluon_line(context: svg_high_level.Context, p1: Point, p2: Point, center=True, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+def gluon_line(context: svg_high_level.Context,
+               p1: Point,
+               p2: Point,
+               center: bool = True,
+               is_anti_particle: bool = False,
+               draw_arrow: bool = False,
+               is_counterterm: bool = False) -> None:
     # TODO: Make loops density continuous
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     number_of_loops = 8
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
     if center:
         step_size = distance / (number_of_loops + 2)
     else:
@@ -340,7 +429,7 @@ def gluon_line(context: svg_high_level.Context, p1: Point, p2: Point, center=Tru
     loop_width = step_size  # 0.05 ist ein guter Wert
     loop_height = 8 * context.line_width
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
@@ -413,14 +502,20 @@ def gluon_line(context: svg_high_level.Context, p1: Point, p2: Point, center=Tru
         _draw_cross(context, xm, ym, angle)
 
 
-def gluon_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, center=True, is_anti_particle=True, draw_arrow=True, is_counterterm=False):
+def gluon_line_curved(context: svg_high_level.Context,
+                      p1: Point,
+                      p2: Point,
+                      center: bool = True,
+                      is_anti_particle: bool = True,
+                      draw_arrow: bool = True,
+                      is_counterterm: bool = False) -> None:
     # TODO: Improve this function! Results are not smooth!
 
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     number_of_loops = 8
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
 
     if center:
         step_size = distance / (number_of_loops + 2)
@@ -431,11 +526,10 @@ def gluon_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, cen
 
     loop_height = 8 * context.line_width
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
-
 
     for i in range(number_of_loops):
 
@@ -481,16 +575,21 @@ def gluon_line_curved(context: svg_high_level.Context, p1: Point, p2: Point, cen
     context.path_finish()
 
 
-def scalar_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+def scalar_line(context: svg_high_level.Context,
+                p1: Point,
+                p2: Point,
+                is_anti_particle: bool = False,
+                draw_arrow: bool = False,
+                is_counterterm: bool = False) -> None:
     # TODO: Maybe use stroke dasharray instead
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     number_of_dashes = 6
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
     step_size = distance / (2 * number_of_dashes - 1)
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
@@ -517,15 +616,20 @@ def scalar_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_p
         _draw_cross(context, xm, ym, angle)
 
 
-def ghost_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=True, is_counterterm=False):
+def ghost_line(context: svg_high_level.Context,
+               p1: Point,
+               p2: Point,
+               is_anti_particle: bool = False,
+               draw_arrow: bool = True,
+               is_counterterm: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     number_of_dots = 20
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
     step_size = distance / number_of_dots
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     current_position_x = x1
     current_position_y = y1
@@ -551,7 +655,12 @@ def ghost_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_pa
         _draw_cross(context, xm, ym, angle)
 
 
-def double_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_particle=False, draw_arrow=False, is_counterterm=False):
+def double_line(context: svg_high_level.Context,
+                p1: Point,
+                p2: Point,
+                is_anti_particle: bool = False,
+                draw_arrow: bool = False,
+                is_counterterm: bool = False) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
     shift = 1.5 * context.line_width
@@ -562,7 +671,7 @@ def double_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_p
     _draw_line(context, x1, y1 - shift / 2, x2, y2 - shift / 2)
 
     if draw_arrow or is_counterterm:
-        angle = -math.atan2(y2 - y1, x2 - x1)
+        angle = get_angle(p1, p2)
 
         xm = (x1 + x2) / 2
         ym = (y1 + y2) / 2
@@ -574,33 +683,31 @@ def double_line(context: svg_high_level.Context, p1: Point, p2: Point, is_anti_p
         _draw_cross(context, xm, ym, angle)
 
 
-def rotate_vector_2d(vec_in, angle):
-    x_out = math.cos(angle) * vec_in[0] + math.sin(angle) * vec_in[1]
-    y_out = - math.sin(angle) * vec_in[0] + math.cos(angle) * vec_in[1]
-
-    vec_out = (x_out, y_out)
-
-    return vec_out
-
-
-def draw_arrow(context: svg_high_level.Context, p1: Point, p2: Point):
+def draw_arrow(context: svg_high_level.Context,
+               p1: Point,
+               p2: Point) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     _draw_line(context, x1, y1, x2, y2)
     _draw_triangle(context, x2, y2, angle=angle, is_anti_particle=False)
 
 
-def draw_circle(context: svg_high_level.Context, p: Point, radius: float, line_width: float = None,
-                line_color: tuple[float, float, float] = None, fill_color: tuple[float, float, float] = None,
-                fill_opacity: float = None, line_opacity: float = None):
+def draw_circle(context: svg_high_level.Context,
+                p: Point,
+                radius: float,
+                line_width: float = None,
+                line_color: tuple[float, float, float] = None,
+                fill_color: tuple[float, float, float] = None,
+                fill_opacity: float = None,
+                line_opacity: float = None) -> None:
     cx, cy = p.x, p.y
 
     _draw_full_circle(context, cx=cx, cy=cy, r=radius, line_width=line_width, line_color=line_color,
                       fill_color=fill_color, fill_opacity=fill_opacity, line_opacity=line_opacity)
 
 
-def grid(context: svg_high_level.Context):
+def grid(context: svg_high_level.Context) -> None:
     # vertical lines
     for x in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
         _draw_line(context,
@@ -622,19 +729,23 @@ def grid(context: svg_high_level.Context):
         draw_text(context, str(y), x=0.01, y=y+0.02, fontsize=8)
 
 
-def draw_arc(context: svg_high_level.Context, p1: Point, p2: Point, curvature: str):
+def draw_arc(context: svg_high_level.Context,
+             p1: Point,
+             p2: Point,
+             curvature: str) -> None:
     # curvature: "right" or "left"
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
 
-    distance = math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+    distance = get_distance(p1, p2)
     arc_radius = distance / 2
 
-    angle = -math.atan2(y2 - y1, x2 - x1)
+    angle = get_angle(p1, p2)
 
     context.path_init(stroke_color_rgb=context.line_color, stroke_width=context.line_width, fill_opacity=0)
     context.path_move_to(x1, y1)
 
-    factor = (4 / 3) * (math.sqrt(2) - 1)  # see https://stackoverflow.com/questions/1734745/how-to-create-circle-with-bézier-curves
+    factor = (4 / 3) * (math.sqrt(2) - 1)
+    # see https://stackoverflow.com/questions/1734745/how-to-create-circle-with-bézier-curves
 
     # first Bézier curve (coordinates relative to start)
     if curvature == "right":
@@ -677,3 +788,23 @@ def draw_arc(context: svg_high_level.Context, p1: Point, p2: Point, curvature: s
                                   p2_rotated[0], p2_rotated[1])
 
     context.path_finish()
+
+
+def get_distance(p1: Point, p2: Point) -> float:
+    distance = math.sqrt((p2.x - p1.x)**2 + (p2.y - p1.y)**2)
+    return distance
+
+
+def get_angle(p1: Point, p2: Point) -> float:
+    angle = - math.atan2(p2.y - p1.y, p2.x - p1.x)
+    return angle
+
+
+def rotate_vector_2d(vec_in: tuple[float, float],
+                     angle: float) -> tuple[float, float]:
+    x_out = math.cos(angle) * vec_in[0] + math.sin(angle) * vec_in[1]
+    y_out = - math.sin(angle) * vec_in[0] + math.cos(angle) * vec_in[1]
+
+    vec_out = (x_out, y_out)
+
+    return vec_out

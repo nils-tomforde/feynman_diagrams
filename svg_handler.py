@@ -29,7 +29,8 @@ class SVG:
         content_string = ""
 
         content_string += '<?xml version="1.0" encoding="UTF-8"?>\n'
-        content_string += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n'
+        content_string += ('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" '
+                           '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n')
         content_string += self.root_tag.get_string_representation()
 
         self.content_string = content_string
@@ -55,10 +56,22 @@ def check_xml_well_formed():
 
 
 class Path(xml_handler.Tag):
-    def __init__(self, d: str, fill: str = None, stroke: str = None, stroke_width: str = None,
-                 stroke_linecap: str = None, stroke_linejoin: str = None, stroke_dasharray: str = None,
-                 stroke_dashoffset: str = None, fill_rule: str = None, fill_opacity: str = None, transform: str = None,
-                 opacity: str = None, clip_path: str = None, marker_start: str = None, marker_mid: str = None,
+    def __init__(self,
+                 d: str,
+                 fill: str = None,
+                 stroke: str = None,
+                 stroke_width: str = None,
+                 stroke_linecap: str = None,
+                 stroke_linejoin: str = None,
+                 stroke_dasharray: str = None,
+                 stroke_dashoffset: str = None,
+                 fill_rule: str = None,
+                 fill_opacity: str = None,
+                 transform: str = None,
+                 opacity: str = None,
+                 clip_path: str = None,
+                 marker_start: str = None,
+                 marker_mid: str = None,
                  marker_end: str = None) -> None:
 
         attributes = {
@@ -84,7 +97,15 @@ class Path(xml_handler.Tag):
 
 
 class Circle(xml_handler.Tag):
-    def __init__(self, cx: str, cy: str, r: str, fill: str, stroke: str, fill_opacity: str, opacity: str, stroke_width: str):
+    def __init__(self,
+                 cx: str,
+                 cy: str,
+                 r: str,
+                 fill: str,
+                 stroke: str,
+                 fill_opacity: str,
+                 opacity: str,
+                 stroke_width: str):
         attributes = {
             "cx": cx,
             "cy": cy,
@@ -100,7 +121,11 @@ class Circle(xml_handler.Tag):
 
 
 class Ellipse(xml_handler.Tag):
-    def __init__(self, cx: str, cy: str, rx: str, ry: str):
+    def __init__(self,
+                 cx: str,
+                 cy: str,
+                 rx: str,
+                 ry: str):
         attributes = {
             "cx": cx,
             "cy": cy,
@@ -112,7 +137,13 @@ class Ellipse(xml_handler.Tag):
 
 
 class Rectangle(xml_handler.Tag):
-    def __init__(self, x: str, y: str, width: str, height: str, fill: str = None, fill_opacity: str = None):
+    def __init__(self,
+                 x: str,
+                 y: str,
+                 width: str,
+                 height: str,
+                 fill: str = None,
+                 fill_opacity: str = None):
         attributes = {
             "x": x,
             "y": y,
@@ -126,7 +157,11 @@ class Rectangle(xml_handler.Tag):
 
 
 class Line(xml_handler.Tag):
-    def __init__(self, x1: str, y1: str, x2: str, y2: str):
+    def __init__(self,
+                 x1: str,
+                 y1: str,
+                 x2: str,
+                 y2: str):
         attributes = {
             "x1": x1,
             "y1": y1,
@@ -138,7 +173,8 @@ class Line(xml_handler.Tag):
 
 
 class Polyline(xml_handler.Tag):
-    def __init__(self, points: str):
+    def __init__(self,
+                 points: str):
         attributes = {
             "points": points
         }
@@ -147,7 +183,8 @@ class Polyline(xml_handler.Tag):
 
 
 class Polygon(xml_handler.Tag):
-    def __init__(self, points: str):
+    def __init__(self,
+                 points: str):
         attributes = {
             "points": points
         }
@@ -156,7 +193,14 @@ class Polygon(xml_handler.Tag):
 
 
 class Text(xml_handler.Tag):
-    def __init__(self, text_string: str, x: str, y: str, text_anchor: str, writing_mode: str, glyph_orientation_vertical: str, font_size: str):
+    def __init__(self,
+                 text_string: str,
+                 x: str,
+                 y: str,
+                 text_anchor: str,
+                 writing_mode: str,
+                 glyph_orientation_vertical: str,
+                 font_size: str):
         attributes = {
             "x": x,
             "y": y,
@@ -184,5 +228,3 @@ class Group(xml_handler.Tag):
         }
 
         super().__init__(tag_name="g", attributes=attributes, content="", is_empty=False)
-
-

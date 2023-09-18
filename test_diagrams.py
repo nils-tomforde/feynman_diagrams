@@ -21,6 +21,7 @@ def main():
     # Groups
     dm.draw_diagram(width=512, height=512, commands=cmds_test_groups, file_path=".\\output\\tests\\test_groups.svg")
 
+
 def cmds_test_propagator(ctx: svg_high_level.Context, mode: str):
     ctx.set_fontsize(20)
     ctx.set_line_width(2)
