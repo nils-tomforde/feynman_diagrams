@@ -112,6 +112,14 @@ def cmds_test_arc(ctx):
     dm.vertex(ctx, vx_5)
     dm.vertex(ctx, vx_6)
 
+    vx_7 = dm.Vertex(ctx, 0.7, 0.4)
+    vx_8 = dm.Vertex(ctx, 0.9, 0.2)
+
+    dm.ghost_line_curved(ctx, vx_7, vx_8, curvature="left")
+
+    dm.vertex(ctx, vx_7)
+    dm.vertex(ctx, vx_8)
+
 
 def cmds_test_groups(ctx):
     ctx.set_fontsize(20)

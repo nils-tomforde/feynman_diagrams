@@ -24,6 +24,7 @@ def group(context: svg_high_level.Context,
           width: float,
           height: float,
           rotation_angle: float = 0) -> None:
+    # TODO: Maybe transfer line_color, font_color, line_width, fontsize etc. from context to context_group
     x *= context.scaling_x
     y *= context.scaling_y
 
@@ -297,12 +298,12 @@ def boson_line(context: svg_high_level.Context,
                is_anti_particle: bool = False,
                draw_arrow: bool = False,
                is_counterterm: bool = False,
-               start_with_dale: bool = False) -> None:
+               start_with_dale: bool = False,
+               number_of_waves: int = 6) -> None:
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
     # TODO: Make wave density constant
     # TODO: Add possibility to change whether wave starts with hill or dale
 
-    number_of_waves = 6
     shift_size = 5 * context.line_width
 
     if start_with_dale:
@@ -414,11 +415,10 @@ def gluon_line(context: svg_high_level.Context,
                center: bool = True,
                is_anti_particle: bool = False,
                draw_arrow: bool = False,
-               is_counterterm: bool = False) -> None:
+               is_counterterm: bool = False,
+               number_of_loops: int = 8) -> None:
     # TODO: Make loops density continuous
     x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
-
-    number_of_loops = 8
 
     distance = get_distance(p1, p2)
     if center:
@@ -650,6 +650,56 @@ def ghost_line(context: svg_high_level.Context,
 
     if draw_arrow:
         _draw_triangle(context, xm, ym, angle, is_anti_particle=is_anti_particle)
+
+    if is_counterterm:
+        _draw_cross(context, xm, ym, angle)
+
+
+def ghost_line_curved(context: svg_high_level.Context,
+                      p1: Point,
+                      p2: Point,
+                      curvature: str,
+                      is_antiparticle: bool = False,
+                      draw_arrow: bool = True,
+                      is_counterterm: bool = False,
+                      number_of_dots: int = 20) -> None:
+    x1, y1, x2, y2 = p1.x, p1.y, p2.x, p2.y
+
+    distance = get_distance(p1, p2)
+    angle = get_angle(p1, p2)
+
+    curvature_radius = distance / 2
+
+    for i in range(1, number_of_dots):
+        angle_i = i * math.pi / number_of_dots
+
+        x = - math.cos(angle_i) * distance / 2 + distance / 2
+        y = - math.sin(angle_i) * distance / 2
+
+        if curvature == "left":
+            y *= -1
+        elif curvature == "right":
+            pass
+        else:
+            raise
+
+        p = (x, y)
+        p_rotated = rotate_vector_2d(p, angle)
+
+        _draw_full_circle(context, x1 + p_rotated[0], y1 + p_rotated[1], r=context.line_width*0.5)
+
+    if curvature == "left":
+        m_shift = rotate_vector_2d((0, distance / 2), angle)
+    elif curvature == "right":
+        m_shift = rotate_vector_2d((0, - distance / 2), angle)
+    else:
+        raise
+
+    xm = (x1 + x2) / 2 + m_shift[0]
+    ym = (y1 + y2) / 2 + m_shift[1]
+
+    if draw_arrow:
+        _draw_triangle(context, xm, ym, angle, is_anti_particle=is_antiparticle)
 
     if is_counterterm:
         _draw_cross(context, xm, ym, angle)
