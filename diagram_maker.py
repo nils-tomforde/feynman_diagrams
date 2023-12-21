@@ -23,7 +23,9 @@ def group(context: svg_high_level.Context,
           y: float,
           width: float,
           height: float,
-          rotation_angle: float = 0) -> None:
+          rotation_angle: float = 0,
+          scale_x: float = 1,
+          scale_y: float = 1) -> None:
     # TODO: Maybe transfer line_color, font_color, line_width, fontsize etc. from context to context_group
     x *= context.scaling_x
     y *= context.scaling_y
@@ -35,7 +37,7 @@ def group(context: svg_high_level.Context,
 
     commands(context_group)
 
-    transform_string = f"translate({x},{y}) rotate({rotation_angle})"
+    transform_string = f"translate({x},{y}) rotate({rotation_angle}) scale({scale_x}, {scale_y})"
 
     group_tag = svg_handler.Group(transform=transform_string)
 

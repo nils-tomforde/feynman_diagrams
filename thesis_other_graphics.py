@@ -8,8 +8,6 @@ def main():
     dm.draw_diagram(width=256, height=256, commands=cmds_backcover, file_path=".\\output\\thesis\\other_graphics\\graphic_backcover.svg")
 
 def cmds_kinematics_two_particles(ctx: svg_high_level.Context):
-    # Different lengths of the photon / boson line
-
     ctx.set_fontsize(20)
     ctx.set_line_width(2)
     ctx.set_line_color((0, 0, 0))
