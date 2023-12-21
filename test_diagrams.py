@@ -158,6 +158,5 @@ def cmds_test_groups(ctx):
     dm.group(ctx, _cmds_group2, width=0.5, height=1, x=0.5, y=0, rotation_angle=0)
 
 
-
 if __name__ == "__main__":
     main()
